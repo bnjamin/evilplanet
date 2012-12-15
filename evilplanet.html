@@ -7,7 +7,19 @@
 </body>
 
 <template name="hello">
-  <h1>Hello World!</h1>
-  {{greeting}}
-  <input type="button" value="Click" />
+  <div class="navbar">
+    <div class="navbar-inner">
+      <a class="brand" href="#">Title</a>
+      <ul class="nav">
+      </ul>
+      <div style="float: right; margin-top: 0.5rem;">
+          {{loginButtons align="right"}}
+      </div>
+    </div>
+  </div>
+
+  <canvas width="500" height="500" style="background:#ccc;">
+
+  </canvas>
+
 </template>

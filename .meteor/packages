@@ -5,5 +5,8 @@
 
 autopublish
 insecure
+bootstrap
 preserve-inputs
 coffeescript
+accounts-password
+accounts-ui
