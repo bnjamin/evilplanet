@@ -1,4 +1,4 @@
-class Game
+class @Game
   @stage = 0
   constructor: ->
     @stage = new Stage

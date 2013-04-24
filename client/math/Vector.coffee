@@ -1,6 +1,6 @@
 ### 2D Vector ###
 
-class Vector
+class @Vector
 	
 	### Adds two vectors and returns the product. ###
 	@add: (v1, v2) ->
