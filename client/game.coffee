@@ -70,6 +70,7 @@ class Stage
 
   renderElements: ->
     @ctx.clearRect 0, 0, width, height
+    @drawTargets()
     # Draw bullets
     @ctx.beginPath()
     for e in @elements
@@ -78,11 +79,17 @@ class Stage
       @ctx.arc(e.particle.pos.x, e.particle.pos.y, e.radius, 0, 2 * Math.PI, false)
       @ctx.fillStyle = '#999'
       @ctx.fill()
+    @drawPlayers()
+
+  drawPlayers: ->
     for p in @game.players
       @drawPlayer p
 
+  drawTargets: ->
+    for p in @game.players
+      @drawTarget p.x, p.y, p.target
+    
   drawPlayer: (player) ->
-    @drawTarget player.x, player.y, player.target
     # Render player
     @ctx.beginPath()
     @ctx.arc(player.x, player.y, 20, 0, 2 * Math.PI, false)
@@ -96,7 +103,6 @@ class Stage
     @ctx.stroke()
 
   drawTarget: (x, y, vector) ->
-
     @ctx.lineWidth = 20
     @ctx.strokeStyle = "#222"
     @ctx.lineCap = "round"
