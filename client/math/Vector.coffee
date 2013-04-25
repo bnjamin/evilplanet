@@ -33,6 +33,17 @@ class @Vector
 	scale: (f) ->
 		@x *= f; @y *= f; @
 
+	### Rotates this vector by angle. ###
+	rotate: (a) ->
+		x = @x
+		y = @y
+		@x = x*Math.cos(a)-y*Math.sin(a)
+		@y = x*Math.sin(a)+y*Math.cos(a)
+
+	### Increments this vectors magnitude. ###
+	increment: (i) ->
+		@scale (@mag()+i)/@mag()
+
 	### Computes the dot product between vectors. ###
 	dot: (v) ->
 		@x * v.x + @y * v.y
