@@ -3,7 +3,7 @@ class @Particle
 
 	@GUID = 0
 
-	constructor: (@mass = 1.0) ->
+	constructor: (@mass = 1.0, @fixed = false) ->
 
 		# Set a unique id.
 		@id = 'p' + Particle.GUID++
@@ -15,7 +15,7 @@ class @Particle
 		@setRadius 1.0
 
 		# Apply forces.
-		@fixed = false
+		#@fixed = false
 
 		# Behaviours to be applied.
 		@behaviours = []
