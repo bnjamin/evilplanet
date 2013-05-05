@@ -1,20 +1,16 @@
 class @Game
   @stage = 0
   constructor: ->
-    @stage = new Stage @
-    # Add players
-    # @players = []
-    # @players.push 
-    # player1 = new Player '#2178DB', 200, 200
-    # player1.particle 
-    # @players.push new Player '#D1460F', 1240, 590
+    @stage = new Stage
 
     @stage.setupListeners()
     
-    for i in [1..1]
-      @stage.addElement(720, 395, 20, 200, "#666", false)
+    @stage.addPlanet 720, 395, "#666", 50, 150
+    @stage.addPlanet 800, 120, "#666", 20, 60
+    @stage.addPlanet 660, 680, "#666", 20, 60
 
-    @stage.addPlayer()
+    @stage.addPlayer 200, 200, '#2178DB'
+    @stage.addPlayer 1200, 500, '#E0351B'
 
     setInterval =>
       @stage.physics.step()
@@ -23,10 +19,19 @@ class @Game
 
 class Player
   constructor: (@color, @x = 700, @y = 300, @target = 0) ->
-    @target = new Vector(0, 100)
+    @target = new Vector(0, 80)
     @particle = new Particle 1, false
-    @particle.moveTo new Vector(200, 200)
+    @particle.moveTo new Vector(@x, @y)
     @particle.setRadius 20
+
+class Planet
+  constructor: (@color, @x = 700, @y = 300, @mass, @radius, physics, collide) ->
+    @particle = new Particle mass, false
+    @particle.moveTo new Vector(@x, @y)
+    @particle.setRadius radius
+    @particle.behaviours.push collide
+    collide.pool.push @particle
+    physics.particles.push @particle
 
 class Stage
   width = 1440
@@ -35,7 +40,7 @@ class Stage
   constructor: (@game) ->
     @physics = new Physics
     @physics.integrator = new ImprovedEuler
-    @physics.viscosity = 0.001
+    @physics.viscosity = 0.0001
     @bounds = new EdgeBounce new Vector(0, 0), new Vector(width, height)
     @collide = new Collision yes, (p, o) =>
       @removeElement o.id
@@ -43,6 +48,7 @@ class Stage
     @ctx = document.getElementById("canvas").getContext('2d')
     @elements = []
     @players = []
+    @planets = []
 
   removeElement: (id) ->
     # Find and remove graphics
@@ -69,10 +75,16 @@ class Stage
     @addElement(player.x+offset.x, player.y+offset.y, 1, 5, "#fff")
     particle = @physics.particles[@physics.particles.length-1]
     particle.acc.add(target.clone().scale(100))
-    particle.behaviours.push new Attraction(@physics.particles[0].pos)
+    # Push all planet positions as attractions
+    for planet in @planets
+      particle.behaviours.push new Attraction(planet.particle.pos, 2000, planet.mass)
 
-  addPlayer: (x, y, mass, radius, color, fixed) ->
-    player = new Player '#2178DB', 200, 200
+  addPlanet: (x, y, color, mass, radius) ->
+    planet = new Planet color, x, y, mass, radius, @physics, @collide
+    @planets.push planet
+
+  addPlayer: (x, y, color, mass, radius, fixed) ->
+    player = new Player color, x, y
     player.particle.behaviours.push @attraction, @collide
     @collide.pool.push player.particle
     @physics.particles.push player.particle
@@ -88,9 +100,16 @@ class Stage
 
   renderElements: ->
     @ctx.clearRect 0, 0, width, height
-    @drawTargets()
-    @drawBullets()
     @drawPlayers()
+    @drawBullets()
+    @drawPlanets()
+
+  drawPlanets: ->
+    for p in @planets
+      @ctx.beginPath()
+      @ctx.arc(p.particle.pos.x, p.particle.pos.y, p.radius+5, 0, 2 * Math.PI, false)
+      @ctx.fillStyle = p.color
+      @ctx.fill()
 
   drawBullets: ->
     # Draw bullets
@@ -104,11 +123,50 @@ class Stage
 
   drawPlayers: ->
     for p in @players
+      @drawRings p
+      @drawTarget p.x, p.y, p.target
       @drawPlayer p
 
-  drawTargets: ->
-    for p in @players
-      @drawTarget p.x, p.y, p.target
+  drawRings: (player) ->
+    @ctx.beginPath()
+    @ctx.arc(player.x, player.y, 32, 0, 2 * Math.PI, false)
+    @ctx.fillStyle = "#222"
+    @ctx.fill()
+
+    @ctx.beginPath()
+    @ctx.arc(player.x, player.y, 30, 0, 2 * Math.PI, false)
+    @ctx.fillStyle = "#111"
+    @ctx.fill()
+
+    @ctx.beginPath()
+    @ctx.arc(player.x, player.y, 29, 0, 2 * Math.PI, false)
+    @ctx.fillStyle = "#222"
+    @ctx.fill()
+
+    @ctx.beginPath()
+    @ctx.arc(player.x, player.y, 27, 0, 2 * Math.PI, false)
+    @ctx.fillStyle = "#111"
+    @ctx.fill()
+
+    @ctx.beginPath()
+    @ctx.arc(player.x, player.y, 26, 0, 2 * Math.PI, false)
+    @ctx.fillStyle = "#222"
+    @ctx.fill()
+
+    @ctx.beginPath()
+    @ctx.arc(player.x, player.y, 24, 0, 2 * Math.PI, false)
+    @ctx.fillStyle = "#111"
+    @ctx.fill()
+
+    @ctx.beginPath()
+    @ctx.arc(player.x, player.y, 23, 0, 2 * Math.PI, false)
+    @ctx.fillStyle = "#222"
+    @ctx.fill()
+
+    @ctx.beginPath()
+    @ctx.arc(player.x, player.y, 21, 0, 2 * Math.PI, false)
+    @ctx.fillStyle = "#111"
+    @ctx.fill()
     
   drawPlayer: (player) ->
     # Render player
@@ -125,15 +183,23 @@ class Stage
 
   drawTarget: (x, y, vector) ->
 
-    @ctx.lineWidth = 20
-    @ctx.strokeStyle = "#222"
+    @ctx.lineWidth = 22
+    @ctx.strokeStyle = "#111"
     @ctx.lineCap = "round"
     @ctx.beginPath()
     @ctx.moveTo(x, y)
     @ctx.lineTo(x+vector.x/2, y+vector.y/2)
     @ctx.stroke()
 
-    @ctx.lineWidth = 2
+    @ctx.lineWidth = 20
+    @ctx.strokeStyle = "#333"
+    @ctx.lineCap = "round"
+    @ctx.beginPath()
+    @ctx.moveTo(x, y)
+    @ctx.lineTo(x+vector.x/2, y+vector.y/2)
+    @ctx.stroke()
+
+    @ctx.lineWidth = 0.2
     @ctx.strokeStyle = "#111"
     @ctx.lineCap = "round"
     @ctx.beginPath()
