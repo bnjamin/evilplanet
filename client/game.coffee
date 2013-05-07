@@ -5,7 +5,7 @@ class @Game
 
     @stage.setupListeners()
     
-    @stage.addPlanet 720, 395, "#666", 50, 150
+    @stage.addPlanet 720, 395, "#666", 200, 150
     @stage.addPlanet 800, 120, "#666", 20, 60
     @stage.addPlanet 660, 680, "#666", 20, 60
 
@@ -14,7 +14,7 @@ class @Game
 
     setInterval =>
       @stage.physics.step()
-      @stage.renderElements()
+      @stage.render()
     , 42
 
 class Player
@@ -33,6 +33,12 @@ class Planet
     collide.pool.push @particle
     physics.particles.push @particle
 
+class Bullet
+  constructor: (x, y, mass = 3, @radius = 40, @color = "#ffffff", fixed = false) ->
+    @particle = new Particle mass, fixed
+    @particle.moveTo new Vector(x, y)
+    @particle.setRadius radius
+
 class Stage
   width = 1440
   height = 790
@@ -43,18 +49,18 @@ class Stage
     @physics.viscosity = 0.0001
     @bounds = new EdgeBounce new Vector(0, 0), new Vector(width, height)
     @collide = new Collision yes, (p, o) =>
-      @removeElement o.id
+      @removeBullet o.id
     @attraction = new ConstantForce new Vector 0, 0
     @ctx = document.getElementById("canvas").getContext('2d')
-    @elements = []
+    @bullets = []
     @players = []
     @planets = []
 
-  removeElement: (id) ->
+  removeBullet: (id) ->
     # Find and remove graphics
-    for e, i in @elements
+    for e, i in @bullets
       if e.particle.id is id
-        @elements.splice i, 1
+        @bullets.splice i, 1
         break
     # Find and remove particle
     for p, i in @physics.particles
@@ -67,14 +73,14 @@ class Stage
         @collide.pool.splice i, 1
         break
 
-  addBullet: (player) ->
+  fireBullet: (player) ->
     target = player.target
     console.log player.particle
     offset = target.clone().norm().scale 27
 
-    @addElement(player.x+offset.x, player.y+offset.y, 1, 5, "#fff")
+    @addBullet(player.x+offset.x, player.y+offset.y, 1, 5, "#fff")
     particle = @physics.particles[@physics.particles.length-1]
-    particle.acc.add(target.clone().scale(100))
+    particle.acc.add(target.clone().scale(120))
     # Push all planet positions as attractions
     for planet in @planets
       particle.behaviours.push new Attraction(planet.particle.pos, 2000, planet.mass)
@@ -88,17 +94,16 @@ class Stage
     player.particle.behaviours.push @attraction, @collide
     @collide.pool.push player.particle
     @physics.particles.push player.particle
-    @elements.push player
     @players.push player
 
-  addElement: (x, y, mass, radius, color, fixed) ->
-    e = new Element(x, y, mass, radius, color, fixed)
+  addBullet: (x, y, mass, radius, color) ->
+    e = new Bullet(x, y, mass, radius, color)
     e.particle.behaviours.push @attraction, @collide
     @collide.pool.push e.particle
     @physics.particles.push e.particle
-    @elements.push e
+    @bullets.push e
 
-  renderElements: ->
+  render: ->
     @ctx.clearRect 0, 0, width, height
     @drawPlayers()
     @drawBullets()
@@ -114,10 +119,10 @@ class Stage
   drawBullets: ->
     # Draw bullets
     @ctx.beginPath()
-    for e in @elements
+    for e in @bullets
       #@ctx.drawImage e.image, e.particle.pos.x - e.radius, e.particle.pos.y - e.radius, e.radius*2, e.radius*2
       @ctx.beginPath()
-      @ctx.arc(e.particle.pos.x, e.particle.pos.y, e.radius+5, 0, 2 * Math.PI, false)
+      @ctx.arc(e.particle.pos.x, e.particle.pos.y, e.radius, 0, 2 * Math.PI, false)
       @ctx.fillStyle = e.color
       @ctx.fill()
 
@@ -212,7 +217,7 @@ class Stage
       # Player 1 controls
       target = @players[0].target
       if event.keyCode is 32 # space
-        @addBullet @players[0]
+        @fireBullet @players[0]
       if event.keyCode is 37 # left
         console.log "Rotating left"
         target.rotate -Math.PI/50
@@ -227,9 +232,3 @@ class Stage
         console.log "Decreasing power"
         if target.mag() > 10
           target.increment -10
-
-class Element
-  constructor: (x, y, mass = 3, @radius = 40, @color = "#ffffff", fixed = false) ->
-    @particle = new Particle mass, fixed
-    @particle.moveTo new Vector(x, y)
-    @particle.setRadius radius
