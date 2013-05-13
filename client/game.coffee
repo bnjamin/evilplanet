@@ -18,7 +18,7 @@ class @Game
     , 42
 
 class Player
-  constructor: (@color, @x = 700, @y = 300, @target = 0) ->
+  constructor: (@color, @x = 700, @y = 300, @target = 0, @health = 5) ->
     @target = new Vector(0, 80)
     @particle = new Particle 1, false
     @particle.moveTo new Vector(@x, @y)
@@ -49,12 +49,19 @@ class Stage
     @physics.viscosity = 0.0001
     @bounds = new EdgeBounce new Vector(0, 0), new Vector(width, height)
     @collide = new Collision yes, (p, o) =>
+      @hitPlayer p.id
       @removeBullet o.id
     @attraction = new ConstantForce new Vector 0, 0
     @ctx = document.getElementById("canvas").getContext('2d')
     @bullets = []
     @players = []
     @planets = []
+
+  hitPlayer: (id) ->
+    for p, i in @players
+      if p.particle.id is id
+        p.health--
+        break
 
   removeBullet: (id) ->
     # Find and remove graphics
@@ -133,45 +140,16 @@ class Stage
       @drawPlayer p
 
   drawRings: (player) ->
-    @ctx.beginPath()
-    @ctx.arc(player.x, player.y, 32, 0, 2 * Math.PI, false)
-    @ctx.fillStyle = "#222"
-    @ctx.fill()
+    for i in [player.health-1..0] by -1
+      @ctx.beginPath()
+      @ctx.arc(player.x, player.y, 23+(i*3), 0, 2 * Math.PI, false)
+      @ctx.fillStyle = "#222"
+      @ctx.fill()
 
-    @ctx.beginPath()
-    @ctx.arc(player.x, player.y, 30, 0, 2 * Math.PI, false)
-    @ctx.fillStyle = "#111"
-    @ctx.fill()
-
-    @ctx.beginPath()
-    @ctx.arc(player.x, player.y, 29, 0, 2 * Math.PI, false)
-    @ctx.fillStyle = "#222"
-    @ctx.fill()
-
-    @ctx.beginPath()
-    @ctx.arc(player.x, player.y, 27, 0, 2 * Math.PI, false)
-    @ctx.fillStyle = "#111"
-    @ctx.fill()
-
-    @ctx.beginPath()
-    @ctx.arc(player.x, player.y, 26, 0, 2 * Math.PI, false)
-    @ctx.fillStyle = "#222"
-    @ctx.fill()
-
-    @ctx.beginPath()
-    @ctx.arc(player.x, player.y, 24, 0, 2 * Math.PI, false)
-    @ctx.fillStyle = "#111"
-    @ctx.fill()
-
-    @ctx.beginPath()
-    @ctx.arc(player.x, player.y, 23, 0, 2 * Math.PI, false)
-    @ctx.fillStyle = "#222"
-    @ctx.fill()
-
-    @ctx.beginPath()
-    @ctx.arc(player.x, player.y, 21, 0, 2 * Math.PI, false)
-    @ctx.fillStyle = "#111"
-    @ctx.fill()
+      @ctx.beginPath()
+      @ctx.arc(player.x, player.y, 22+(i*3), 0, 2 * Math.PI, false)
+      @ctx.fillStyle = "#111"
+      @ctx.fill()
     
   drawPlayer: (player) ->
     # Render player
@@ -196,15 +174,15 @@ class Stage
     @ctx.lineTo(x+vector.x/2, y+vector.y/2)
     @ctx.stroke()
 
-    @ctx.lineWidth = 20
-    @ctx.strokeStyle = "#333"
+    @ctx.lineWidth = 19
+    @ctx.strokeStyle = "#222"
     @ctx.lineCap = "round"
     @ctx.beginPath()
     @ctx.moveTo(x, y)
     @ctx.lineTo(x+vector.x/2, y+vector.y/2)
     @ctx.stroke()
 
-    @ctx.lineWidth = 0.2
+    @ctx.lineWidth = 0.1
     @ctx.strokeStyle = "#111"
     @ctx.lineCap = "round"
     @ctx.beginPath()
